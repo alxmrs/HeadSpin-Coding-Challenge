@@ -48,7 +48,17 @@ class AsyncTests(unittest.TestCase):
 
         self.assertEqual(output, expected)
 
+    def test_mult_vs_fib(self):
 
+        expected = '100\n832040\n'
+
+        with captured_output() as (out, err):
+            async(fib, 30)(print_result)
+            async(multiply, 10, 10)(print_result)
+            time.sleep(1)
+        output = out.getvalue()
+
+        self.assertEqual(output, expected)
 
 
 def fib(x):
@@ -56,6 +66,10 @@ def fib(x):
         return x
     else:
         return fib(x - 1) + fib(x - 2)
+
+
+def multiply(x, y):
+    return x * y
 
 
 def fib_fail(x):
