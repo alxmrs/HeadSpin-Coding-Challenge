@@ -1,19 +1,25 @@
 import multiprocessing as mp
-import asyncio
+from concurrent.futures import ProcessPoolExecutor
+
+
 _pool = None
 
 
 def start():
     global _pool
     if _pool is None:
-        _pool = mp.Pool(mp.cpu_count() + 2)
+        _pool = ProcessPoolExecutor(mp.cpu_count()+2)
 
 
 def async(fn, *args):
     """
-    :param fn:
-    :param args:
-    :return:
+    Will execute the input function asynchronously with it's input args.
+    Returns a function (wrapper) that takes a callback. The wrapper function will
+    call the callback with the result of the input function (fn) or an error if one should arise.
+
+    :param fn: A function which takes zero to many args
+    :param args: argument list
+    :return: a function that takes a callback
     """
 
     global _pool
@@ -21,14 +27,17 @@ def async(fn, *args):
     if _pool is None:
         start()
 
-    def wrapper(callback):
-        val_cb = lambda x: callback(x, None)
-        err_cb = lambda e: callback(None, e)
+    future = _pool.submit(fn, *args)
 
-        try:
-            _pool.apply_async(fn, args, callback=val_cb, error_callback=err_cb)
-        except Exception as e:
-            return callback(None, e)
+    def wrapper(callback):
+
+        def future_cb(f):
+            err = f.exception()
+            if err:
+                callback(None, err)
+            else:
+                callback(f.result(), None)
+
+        future.add_done_callback(future_cb)
 
     return wrapper
-
