@@ -21,20 +21,14 @@ def async(fn, *args):
     if _pool is None:
         start()
 
-    res = _pool.apply_async(fn, args)
-
     def wrapper(callback):
-        res.wait()
-        result = _resolve(res)
-        return callback(*result)
+        val_cb = lambda x: callback(x, None)
+        err_cb = lambda e: callback(None, e)
+
+        try:
+            _pool.apply_async(fn, args, callback=val_cb, error_callback=err_cb)
+        except Exception as e:
+            return callback(None, e)
 
     return wrapper
 
-
-def _resolve(res):
-
-    try:
-        val = res.get()
-        return val, None
-    except Exception as e:
-        return None, e

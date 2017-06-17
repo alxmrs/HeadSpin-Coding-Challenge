@@ -4,6 +4,7 @@ from Later.later import start, async
 from contextlib import contextmanager
 from io import StringIO
 import sys
+import time
 
 _fail_text = 'There was an error.'
 
@@ -12,31 +13,40 @@ class AsyncTests(unittest.TestCase):
     def test_general(self):
         start()
 
-        async(fib, 30)(print_result)
+        with captured_output() as (out, err):
+            async(fib, 30)(print_result)
+            time.sleep(2)
 
-        result = async(fib, 30)(return_result)
+        output = out.getvalue()
 
-        self.assertEqual(result, 832040)
+        self.assertEqual(int(output), 832040)
 
     def test_bad_function(self):
         start()
 
-        result = async(fib_fail, 10)(return_result)
+        with captured_output() as (out, err):
+            async(fib_fail, 10)(print_result)
+            time.sleep(1)
 
-        self.assertEqual(result, _fail_text)
+        output = out.getvalue()
 
-    # def test_asynchronous_property(self):
-    #     start()
-    #
-    #     expected = "called second, finish first\ncalled first, finished last\n"
-    #
-    #     with captured_output() as (out, err):
-    #         async(wait_and_return, 2, "called first, finished last")(print_result)
-    #         async(wait_and_return, 1, "called second, finish first")(print_result)
-    #
-    #     output = out.getvalue()
-    #
-    #     self.assertEqual(output, expected)
+        self.assertEqual(output, _fail_text + '\n')
+
+    def test_asynchronous_property(self):
+        start()
+
+        finish_last = "called first, finished last"
+        finish_first = "called second, finish first"
+
+        expected = '\n'.join([finish_first, finish_last]) + '\n'
+
+        with captured_output() as (out, err):
+            async(wait_and_return, 5, finish_last)(print_result)
+            async(wait_and_return, .5, finish_first)(print_result)
+            time.sleep(6)
+        output = out.getvalue()
+
+        self.assertEqual(output, expected)
 
 
 
