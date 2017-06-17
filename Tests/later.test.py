@@ -15,11 +15,11 @@ class AsyncTests(unittest.TestCase):
 
         with captured_output() as (out, err):
             async(fib, 30)(print_result)
-            time.sleep(2)
+            time.sleep(1)
 
-        output = out.getvalue()
+        actual = out.getvalue()
 
-        self.assertEqual(int(output), 832040)
+        self.assertEqual(int(actual), 832040)
 
     def test_bad_function(self):
         start()
@@ -28,9 +28,9 @@ class AsyncTests(unittest.TestCase):
             async(fib_fail, 10)(print_result)
             time.sleep(1)
 
-        output = out.getvalue()
+        actual = out.getvalue()
 
-        self.assertEqual(output, _fail_text + '\n')
+        self.assertEqual(actual, _fail_text + '\n')
 
     def test_asynchronous_property(self):
         start()
@@ -44,9 +44,9 @@ class AsyncTests(unittest.TestCase):
             async(wait_and_return, 5, finish_last)(print_result)
             async(wait_and_return, .5, finish_first)(print_result)
             time.sleep(6)
-        output = out.getvalue()
+        actual = out.getvalue()
 
-        self.assertEqual(output, expected)
+        self.assertEqual(actual, expected)
 
     def test_mult_vs_fib(self):
 
@@ -56,9 +56,37 @@ class AsyncTests(unittest.TestCase):
             async(fib, 30)(print_result)
             async(multiply, 10, 10)(print_result)
             time.sleep(1)
-        output = out.getvalue()
+        actual = out.getvalue()
 
-        self.assertEqual(output, expected)
+        self.assertEqual(actual, expected)
+
+    def test_no_argument_function(self):
+
+        expected = '10\n'
+
+        with captured_output() as (out, err):
+            async(return10)(print_result)
+            time.sleep(1)
+        actual = out.getvalue()
+
+        self.assertEqual(actual, expected)
+
+    def test_deferred_callback(self):
+
+        expected = '10\n'
+
+        with captured_output() as (out, err):
+            promise = async(return10)
+            time.sleep(1)
+            promise(print_result)
+
+        actual = out.getvalue()
+
+        self.assertEqual(actual, expected)
+
+
+
+
 
 
 def fib(x):
@@ -84,6 +112,10 @@ def print_result(val, error):
         print(_fail_text)
     else:
         print(val)
+
+
+def return10():
+    return 10
 
 
 def wait_and_return(t, retval):
