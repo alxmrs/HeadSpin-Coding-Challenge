@@ -9,34 +9,34 @@ _fail_text = 'There was an error.'
 
 
 class AsyncTests(unittest.TestCase):
-    def test_general(self):
-        start()
-
-        async(fib, 30)(print_result)
-
-        result = async(fib, 30)(return_result)
-
-        self.assertEqual(result, 832040)
-
-    def test_bad_function(self):
-        start()
-
-        result = async(fib_fail, 10)(return_result)
-
-        self.assertEqual(result, _fail_text)
-
-    # def test_asynchronous_property(self):
+    # def test_general(self):
     #     start()
     #
-    #     expected = "called second, finish first\ncalled first, finished last\n"
+    #     async(fib, 30)(print_result)
     #
-    #     with captured_output() as (out, err):
-    #         async(wait_and_return, 2, "called first, finished last")(print_result)
-    #         async(wait_and_return, 1, "called second, finish first")(print_result)
+    #     result = async(fib, 30)(return_result)
     #
-    #     output = out.getvalue()
+    #     self.assertEqual(result, 832040)
     #
-    #     self.assertEqual(output, expected)
+    # def test_bad_function(self):
+    #     start()
+    #
+    #     result = async(fib_fail, 10)(return_result)
+    #
+    #     self.assertEqual(result, _fail_text)
+
+    def test_asynchronous_property(self):
+        start()
+
+        expected = "called second, finish first\ncalled first, finished last\n"
+
+        with captured_output() as (out, err):
+            async(wait_and_return, 2, "called first, finished last")(print_result)
+            async(wait_and_return, 1, "called second, finish first")(print_result)
+
+        output = out.getvalue()
+
+        self.assertEqual(output, expected)
 
 
 

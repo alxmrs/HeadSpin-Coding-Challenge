@@ -1,12 +1,12 @@
 import multiprocessing as mp
 import asyncio
 _pool = None
-
+from concurrent.futures import ProcessPoolExecutor, wait
 
 def start():
     global _pool
     if _pool is None:
-        _pool = mp.Pool(mp.cpu_count() + 2)
+        _pool = ProcessPoolExecutor(mp.cpu_count()+2)
 
 
 def async(fn, *args):
@@ -21,20 +21,21 @@ def async(fn, *args):
     if _pool is None:
         start()
 
-    res = _pool.apply_async(fn, args)
+    future = _pool.submit(fn, *args)
 
     def wrapper(callback):
-        res.wait()
-        result = _resolve(res)
+        result = _resolve(future)
         return callback(*result)
 
     return wrapper
 
 
-def _resolve(res):
+def _resolve(future):
 
     try:
-        val = res.get()
+        while not future.done():
+            continue
+        val = future.result()
         return val, None
     except Exception as e:
         return None, e
