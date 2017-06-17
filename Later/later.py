@@ -24,8 +24,7 @@ def async(fn, *args):
     future = _pool.submit(fn, *args)
 
     def wrapper(callback):
-        result = _resolve(future)
-        return callback(*result)
+        future.add_done_callback(callback)
 
     return wrapper
 
