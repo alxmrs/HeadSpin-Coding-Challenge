@@ -1,64 +1,27 @@
 import socket
-import select
 from urllib.parse import urlparse
 
-# socket.setdefaulttimeout(0.5)
+from http_and_sockets.socket_wrapper import SocketWrapper
 
 CRLF = '\r\n'
 
-BUFSIZE = 2048
 
-
-## TODO Create socket class with `with` syntax
-## https://stackoverflow.com/questions/3774328/implementing-use-of-with-object-as-f-in-custom-class-in-python
-
-
-def send(soc, msg: bytes):
-    msg_len = len(msg)
-    total_sent = 0
-    while total_sent < msg_len:
-        sent = soc.send(msg[total_sent:])
-        if sent == 0:
-            raise RuntimeError('Socket connection broken.')
-        total_sent += sent
-
-
-def receive(soc):
-
-    rlist, _, _ = select.select([soc], [], [])
-
-    for s in rlist:
-
-        chunks = []
-
-        while True:
-            chunk = s.recv(BUFSIZE)
-
-            if chunk == b'':
-                break
-
-            chunks.append(chunk)
-
-        return b''.join(chunks)
-
-    return b''
-
-
-def get(raw_url: str):
+def get(raw_url):
     """
+    TODO: document
     :param raw_url:
     :return:
     """
-    url = urlparse(raw_url)
+    parsed_url = urlparse(raw_url)
 
-    path = '/' if url.path == '' else url.path
+    path = '/' if parsed_url.path == '' else parsed_url.path
 
     full_path = path
 
-    if url.query != '':
-        full_path = path + '?' + url.query
+    if parsed_url.query != '':
+        full_path = path + '?' + parsed_url.query
 
-    host = url.netloc
+    host = parsed_url.netloc
     port = 80
 
     request = ("GET {1} HTTP/1.1{0}"
@@ -67,25 +30,21 @@ def get(raw_url: str):
                "Accept-Encoding: gzip{0}"
                "Accept-Charset: ISO-8859-1,UTF-8;q=0.7,*;q=0.7{0}"
                "Cache-Control: no-cache{0}"
-               "Accept-Language: en;q=0.7,en-us;q=0.3{0}{0}") \
-                .format(CRLF, full_path, host)
+               "Accept-Language: en;q=0.7,en-us;q=0.3{0}{0}")\
+        .format(CRLF, full_path, host)\
+        .encode('utf-8')
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
-
-        soc.settimeout(0.3)
-        soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-        soc.connect((host, port))
-
-        send(soc, request.encode('utf-8'))
-        soc.shutdown(1)
-        data = receive(soc)
+    with SocketWrapper(socket.AF_INET, socket.SOCK_STREAM) as sw:
+        sw.connect(host, port)
+        sw.send(request)
+        data = sw.receive()
 
     return data
 
 
-def process_response(resp: bytes):
+def process_response(resp):
     """
+    TODO: add doctest
     After getting the url, print the following:
     (a) the content type and response code
     (b) the number of headers in the response and
@@ -96,8 +55,8 @@ def process_response(resp: bytes):
     header, *rest = resp_str.split(CRLF*2)
 
     # (a) Content type and response code
-    content_type = find_header_value('Content-Type: ', header)
-    status_code = find_header_value('HTTP/1.1 ', header)
+    content_type = _find_header_value('Content-Type: ', header)
+    status_code = _find_header_value('HTTP/1.1 ', header)
     print("Content type: {0}".format(content_type))
     print("Status: {0}".format(status_code))
 
@@ -112,8 +71,18 @@ def process_response(resp: bytes):
         print('Number of lines in body: {0}'.format(num_lines))
 
 
-def find_header_value(header_key, header, ignore_semicolon=False):
+def _find_header_value(header_key, header, ignore_semicolon=False):
+    """
+    TODO: document
+    TODO: add doc tests
+    :param header_key:
+    :param header:
+    :param ignore_semicolon:
+    :return:
+    """
     begin = header.find(header_key)
+
+    assert begin != -1, 'Header must exist!'
 
     end_of_line = header.find(CRLF, begin)
 
