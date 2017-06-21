@@ -1,4 +1,4 @@
-### 2) HTTP and sockets.
+## 2) HTTP and sockets.
 
 Write a python program that inputs a full URL like
 "http://www.url.com/path/a/b/c?p=1&p=2", sends the request, reads the
