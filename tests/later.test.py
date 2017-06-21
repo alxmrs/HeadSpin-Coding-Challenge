@@ -84,6 +84,7 @@ class AsyncTests(unittest.TestCase):
 
         self.assertEqual(actual, expected)
 
+    # TODO: add keyboard interrupt unit test
 
 
 
