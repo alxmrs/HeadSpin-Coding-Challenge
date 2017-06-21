@@ -1,4 +1,4 @@
-### 1) Later: Parallel-asynchronous framework.
+## 1) Later: Parallel-asynchronous framework.
 
 
 Implement a tiny asynchronous programming framework, supporting
@@ -14,19 +14,19 @@ handled differently than a normal function call.
 
 
 Implement a function called "async" that can be called as:
-
+```
    async(fn, arg1, arg2, ...)(callback)
-
+```
 "fn" is a normal function and "arg1", "arg2", etc., are the arguments
 to this function. A normal call to "fn", for example
-
+```
    fn(1, 2)
-
+```
 will run in line -- you have to wait for it to finish before calling
 another function on that thread. An async call, for example,
-
+```
    async(fn, 1, 2)(callback)
-
+```
 will return instantly, and return nothing. It will have invoked
 "fn(1,2)" in a separate execution context. Later, when fn(1, 2)
 finishes, the function "callback" is invoked with the return value of
@@ -45,10 +45,10 @@ Important properties:
 
 
 1. Async function calls should run in parallel with each other. For example,
-
+```
   async(fib, 30)(handle_fib)
   async(multiply, 5, 57)(handle_multiply)
-
+```
 "multiply" should start running before "fib" returns. This means you
 cannot use an approach where the async functions are queued up and
 processed serially.
@@ -69,7 +69,7 @@ functions as well, if needed. For example, a "start()" or "init()"
 function that does any necessary setup.
 
 Here's a possible usage:
-
+```
 import later
 
 def mul(x, y):
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     later.start()
     later.async(fib, 30)(print_result)
     later.async(mul, 50, 60)(print_result)
-
+```
 A program using "later" should exit normally when all functions and
 callbacks have completed execution. If the main thread reaches the end
 of the program, the program needs to wait for all asynchronous
