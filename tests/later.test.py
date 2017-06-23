@@ -35,8 +35,8 @@ class AsyncTests(unittest.TestCase):
     def test_asynchronous_property(self):
         start()
 
-        finish_last = "called first, finished last"
-        finish_first = "called second, finish first"
+        finish_last = 'called first, finished last'
+        finish_first = 'called second, finish first'
 
         expected = '\n'.join([finish_first, finish_last]) + '\n'
 
@@ -83,11 +83,6 @@ class AsyncTests(unittest.TestCase):
         actual = out.getvalue()
 
         self.assertEqual(actual, expected)
-
-    # TODO: add keyboard interrupt unit test
-
-
-
 
 
 def fib(x):
